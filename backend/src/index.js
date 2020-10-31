@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json()) // para entender o body como json
 
 
-const usuarios = []
+const repositories = []
 
 function validateProjetcId(request, response, next){
     const { id } = request.params
@@ -18,61 +18,74 @@ function validateProjetcId(request, response, next){
 // app.use(logRequest)
 // app.use('/projetos/:id', validateProjetcId)
 
-app.get('/usuarios', (request, response) => {
+app.get('/repositories', (request, response) => {
     
-    const { userName } = request.query;
-    const results = userName
-    ? usuarios.find(usuario => usuarios.userName.includes(userName))
-    : usuarios
-
-    return response.json(results)
+    return response.json(repositories)
 
 })
 
-app.post('/usuarios', (request, response) => {
+app.post('/repositories', (request, response) => {
     // const body = request.body;
     // console.log(body)
 
-    const {userName, password} = request.body
+    const {title, url, techs} = request.body
 
-    const usuario = {id:uuid(), userName, password}
-    usuarios.push(usuario)
+    const repositorie = {id:uuid(), title, url, techs, likes: 0}
+    repositories.push(repositorie)
 
-    return response.json(usuarios)
+    return response.json(repositories)
 })
 
-app.put('/usuarios/:id', validateProjetcId, (request, response) => {
-    const { id } = request.params
-    const {userName, password} = request.body
-    const usuarioIndex = usuarios.findIndex(usuario => usuario.id === id)
-    if(usuarioIndex < 0){
+app.post('/repositories/:id/like', (request, response) => {
+
+    const {id} = request.params
+
+    const repositorieIndex = repositories.findIndex(repositorie => repositorie.id === id)
+    if(repositorieIndex < 0){
         return response.status(400).json({
-            error: "Usuario não encontrado."
+            error:"Repositório não encontrado."
         })
     }
 
-    const usuario = {
+    repositories[repositorieIndex].likes++
+
+    return response.json(repositories[repositorieIndex])
+})
+
+app.put('/repositories/:id', validateProjetcId, (request, response) => {
+    const { id } = request.params
+    const { title, url, techs } = request.body
+    const repositorieIndex = repositories.findIndex(repositorie => repositorie.id === id)
+    if(repositorieIndex < 0){
+        return response.status(400).json({
+            error: "Repositório não encontrado."
+        })
+    }
+
+    const repositorie = {
         id,
-        userName,
-        password
+        title,
+        url,
+        techs,
+        likes: repositories[repositorieIndex].likes
     }
 
-    usuarios[usuarioIndex] = usuario
+    repositories[repositorieIndex] = repositorie
 
-    return response.json(usuario)
+    return response.json(repositorie)
 })
 
-app.delete('/usuarios/:id', validateProjetcId, (request, response) => {
+app.delete('/repositories/:id', validateProjetcId, (request, response) => {
     const { id } = request.params
 
-    const usuarioIndex = usuarios.findIndex(usuario => usuario.id === id)
-    if(usuarioIndex < 0){
+    const repositorieIndex = repositories.findIndex(repositorie => repositorie.id === id)
+    if(repositorieIndex < 0){
         return response.status(400).json({
-            error: "Usuario não encontrado."
+            error: "Repositório não encontrado."
         })
     }
 
-    usuarios.splice(usuarioIndex,1)
+    repositories.splice(repositorieIndex,1)
 
     //status 204 pq esta retornando em branco
     return response.status(204).send()
